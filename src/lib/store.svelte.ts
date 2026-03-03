@@ -91,6 +91,12 @@ function createBookmarkStore() {
     });
   }
 
+  async function updateFoldersOrder(newFolders: Folder[]) {
+    // Sync state immediately for UI fluidity
+    state.folders = newFolders;
+    await saveStateToStorage(state);
+  }
+
   // --- Bookmark Actions ---
   async function addBookmark(name: string, url: string, folderId: string) {
     if (!name.trim()) return;
@@ -120,6 +126,20 @@ function createBookmarkStore() {
     });
   }
 
+  async function updateFolderBookmarks(folderId: string, newFolderBookmarks: Bookmark[]) {
+    // 1. We must synchronously calculate new bookmarks to avoid race conditions when dragging between folders
+    const otherBookmarks = state.bookmarks.filter(
+      b => b.folderId !== folderId && !newFolderBookmarks.some(nb => nb.id === b.id)
+    );
+    
+    // 2. Set the folderId on the new list (vital for when an item was dragged from another folder)
+    const updatedFolderBookmarks = newFolderBookmarks.map(b => ({ ...b, folderId }));
+
+    // 3. Update the state synchronously and save
+    state.bookmarks = [...otherBookmarks, ...updatedFolderBookmarks];
+    await saveStateToStorage(state);
+  }
+
   function loadBookmark(url: string) {
     window.location.href = url;
   }
@@ -147,8 +167,10 @@ function createBookmarkStore() {
     addFolder,
     deleteFolder,
     toggleFolderExpanded,
+    updateFoldersOrder,
     addBookmark,
     deleteBookmark,
+    updateFolderBookmarks,
     loadBookmark,
     toggleMinimize,
     _setStateForTest,

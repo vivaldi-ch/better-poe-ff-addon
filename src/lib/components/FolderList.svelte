@@ -1,9 +1,19 @@
 <script lang="ts">
   import { store } from '../store.svelte';
   import FolderItem from './FolderItem.svelte';
+  import { dndzone, type DndEvent } from 'svelte-dnd-action';
+  import { flip } from 'svelte/animate';
+  import type { Folder } from '../types';
 
   let isCreatingFolder = $state(false);
   let newFolderName = $state('');
+
+  // Local state for dragging animations
+  let folders = $state<Folder[]>(store.folders);
+
+  $effect(() => {
+    folders = store.folders;
+  });
 
   function startCreating() {
     isCreatingFolder = true;
@@ -30,6 +40,15 @@
       cancelCreate();
     }
   }
+
+  function handleDndConsider(e: CustomEvent<DndEvent<Folder>>) {
+    folders = e.detail.items;
+  }
+
+  async function handleDndFinalize(e: CustomEvent<DndEvent<Folder>>) {
+    folders = e.detail.items;
+    await store.updateFoldersOrder(folders);
+  }
 </script>
 
 <div class="folder-list-container">
@@ -52,12 +71,19 @@
     {/if}
   </div>
 
-  <div class="folder-list">
+  <div 
+    class="folder-list" 
+    use:dndzone={{ items: folders, flipDurationMs: 300, dropTargetStyle: {} }} 
+    onconsider={handleDndConsider as any} 
+    onfinalize={handleDndFinalize as any}
+  >
     {#if store.folders.length === 0}
       <p class="empty-state">No folders exist.</p>
     {:else}
-      {#each store.folders as folder (folder.id)}
-        <FolderItem folder={folder} />
+      {#each folders as folder (folder.id)}
+        <div animate:flip={{ duration: 300 }}>
+          <FolderItem folder={folder} />
+        </div>
       {/each}
     {/if}
   </div>
@@ -134,6 +160,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 10px;
+    min-height: 50px;
   }
 
   .empty-state {

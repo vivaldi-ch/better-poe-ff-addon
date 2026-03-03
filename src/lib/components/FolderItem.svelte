@@ -1,10 +1,17 @@
 <script lang="ts">
   import { store, DEFAULT_FOLDER_ID } from '../store.svelte';
+  import { dndzone, type DndEvent, TRIGGERS } from 'svelte-dnd-action';
+  import { flip } from 'svelte/animate';
+  import type { Bookmark } from '../types';
 
   let { folder } = $props<{ folder: import('../types').Folder }>();
 
-  // Derived array of bookmarks that belong to this specific folder
-  let folderBookmarks = $derived(store.bookmarks.filter(b => b.folderId === folder.id));
+  let folderBookmarks = $state<Bookmark[]>([]);
+  let isHoveringDrop = $state(false);
+
+  $effect(() => {
+    folderBookmarks = store.bookmarks.filter(b => b.folderId === folder.id);
+  });
 
   function handleToggle() {
     store.toggleFolderExpanded(folder.id);
@@ -17,6 +24,26 @@
     if (confirm(`Delete folder "${folder.name}" and all its bookmarks?`)) {
       store.deleteFolder(folder.id);
     }
+  }
+
+  function handleDndConsider(e: CustomEvent<DndEvent<Bookmark>>) {
+    folderBookmarks = e.detail.items;
+    
+    // svelte-dnd-action fires info about drop state
+    const info = e.detail.info;
+    if (info) {
+        if (info.trigger === TRIGGERS.DRAGGED_ENTERED) {
+            isHoveringDrop = true;
+        } else if (info.trigger === TRIGGERS.DRAGGED_LEFT || info.trigger === TRIGGERS.DRAGGED_LEFT_ALL) {
+            isHoveringDrop = false;
+        }
+    }
+  }
+
+  async function handleDndFinalize(e: CustomEvent<DndEvent<Bookmark>>) {
+    folderBookmarks = e.detail.items;
+    isHoveringDrop = false;
+    await store.updateFolderBookmarks(folder.id, folderBookmarks);
   }
 </script>
 
@@ -34,21 +61,35 @@
   </div>
 
   {#if folder.isExpanded}
-    <div class="folder-contents">
-      {#if folderBookmarks.length === 0}
+    <div class="folder-body">
+      {#if folderBookmarks.length === 0 && !isHoveringDrop}
         <div class="empty-folder">Empty</div>
-      {:else}
-        {#each folderBookmarks as bookmark}
-          <div class="bookmark-item">
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div class="bookmark-name" onclick={() => store.loadBookmark(bookmark.url)} title={bookmark.url}>
-              {bookmark.name}
+      {/if}
+      <div 
+        class="folder-contents"
+        class:drop-target={isHoveringDrop || folderBookmarks.length === 0}
+        use:dndzone={{ 
+            items: folderBookmarks, 
+            flipDurationMs: 300, 
+            dropTargetStyle: {}, // disable default inline styles 
+            type: 'bookmark' 
+        }}
+        onconsider={handleDndConsider as any}
+        onfinalize={handleDndFinalize as any}
+      >
+        {#each folderBookmarks as bookmark (bookmark.id)}
+          <div animate:flip={{ duration: 300 }}>
+            <div class="bookmark-item">
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
+              <div class="bookmark-name" onclick={() => store.loadBookmark(bookmark.url)} title={bookmark.url}>
+                {bookmark.name}
+              </div>
+              <button class="btn-delete" onclick={() => store.deleteBookmark(bookmark.id)} aria-label="Delete">✕</button>
             </div>
-            <button class="btn-delete" onclick={() => store.deleteBookmark(bookmark.id)} aria-label="Delete">✕</button>
           </div>
         {/each}
-      {/if}
+      </div>
     </div>
   {/if}
 </div>
@@ -110,17 +151,34 @@
     color: #ff6b6b;
   }
 
-  .folder-contents {
-    padding: 6px;
+  .folder-body {
     background-color: #111;
     border-top: 1px solid #2a2a2a;
+    position: relative;
+    padding: 6px;
+  }
+
+  .folder-contents {
+    min-height: 40px;
+    border: 2px dashed transparent;
+    border-radius: 4px;
+    transition: border-color 0.2s, background-color 0.2s;
+  }
+
+  .folder-contents.drop-target {
+    border-color: #444;
+    background-color: rgba(255, 255, 255, 0.02);
   }
 
   .empty-folder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     color: #555;
     font-style: italic;
     font-size: 0.9em;
-    padding: 4px 8px;
+    pointer-events: none; /* Crucial so it doesn't block drops */
   }
 
   /* Bookmark item styles matched from previous list */
