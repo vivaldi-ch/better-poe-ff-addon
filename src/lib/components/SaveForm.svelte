@@ -8,8 +8,13 @@
   function startSaving() {
     isSaving = true;
     newBookmarkName = '';
-    // Default to the first folder if it exists, otherwise the unchangeable default
-    selectedFolderId = store.folders.length > 0 ? store.folders[0].id : DEFAULT_FOLDER_ID;
+    
+    // Default to the last used folder if it still exists, otherwise use the default Uncategorized folder
+    if (store.lastSavedFolderId && store.folders.some(f => f.id === store.lastSavedFolderId)) {
+      selectedFolderId = store.lastSavedFolderId;
+    } else {
+      selectedFolderId = DEFAULT_FOLDER_ID;
+    }
   }
 
   async function confirmSave() {

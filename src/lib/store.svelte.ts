@@ -8,7 +8,8 @@ export const DEFAULT_FOLDER_NAME = 'Uncategorized';
 function createBookmarkStore() {
   let state = $state<StorageState>({
     folders: [{ id: DEFAULT_FOLDER_ID, name: DEFAULT_FOLDER_NAME, createdAt: 1, isExpanded: true }],
-    bookmarks: []
+    bookmarks: [],
+    lastSavedFolderId: DEFAULT_FOLDER_ID
   });
   let isMinimized = $state(false);
 
@@ -73,10 +74,13 @@ function createBookmarkStore() {
   async function deleteFolder(folderId: string) {
     if (folderId === DEFAULT_FOLDER_ID) return; // Prevent deleting the fallback folder
     
-    // Deleting a folder also deletes all its child bookmarks
+    // Deleting a folder also deletes all its child bookmarks.
+    // If it was the last saved folder, reset the pointer to default.
     await saveStateToStorage({
+      ...state,
       folders: state.folders.filter(f => f.id !== folderId),
-      bookmarks: state.bookmarks.filter(b => b.folderId !== folderId)
+      bookmarks: state.bookmarks.filter(b => b.folderId !== folderId),
+      lastSavedFolderId: state.lastSavedFolderId === folderId ? DEFAULT_FOLDER_ID : state.lastSavedFolderId
     });
   }
 
@@ -104,7 +108,8 @@ function createBookmarkStore() {
 
     await saveStateToStorage({
       ...state,
-      bookmarks: [...state.bookmarks, newBookmark]
+      bookmarks: [...state.bookmarks, newBookmark],
+      lastSavedFolderId: validFolderId // Remember this folder for next time
     });
   }
 
@@ -136,6 +141,7 @@ function createBookmarkStore() {
   return {
     get folders() { return state.folders },
     get bookmarks() { return state.bookmarks },
+    get lastSavedFolderId() { return state.lastSavedFolderId },
     get isMinimized() { return isMinimized },
     init,
     addFolder,

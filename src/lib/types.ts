@@ -21,7 +21,8 @@ export type Folder = z.infer<typeof FolderSchema>;
 // The entire state to be saved
 export const StorageStateSchema = z.object({
   folders: z.array(FolderSchema),
-  bookmarks: z.array(BookmarkSchema)
+  bookmarks: z.array(BookmarkSchema),
+  lastSavedFolderId: z.string().uuid().optional(), // Persists the last used folder across sessions
 });
 
 export type StorageState = z.infer<typeof StorageStateSchema>;
