@@ -27,7 +27,9 @@ function createBookmarkStore() {
 
   async function saveBookmarksToStorage(updatedBookmarks: Bookmark[]) {
     bookmarks = updatedBookmarks; 
-    await browser.storage.local.set({ poe_bookmarks: updatedBookmarks });
+    // Strip Svelte proxies before passing to extension storage API to avoid DataCloneError
+    const rawBookmarks = $state.snapshot(updatedBookmarks);
+    await browser.storage.local.set({ poe_bookmarks: rawBookmarks });
   }
 
   async function addBookmark(name: string, url: string) {
