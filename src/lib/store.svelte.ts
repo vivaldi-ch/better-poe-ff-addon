@@ -86,6 +86,14 @@ function createBookmarkStore() {
     await browser.storage.local.set({ poe_sidebar_minimized: isMinimized });
   }
 
+  // Internal test helper
+  function _setBookmarksForTest(newBookmarks: Bookmark[]) {
+    bookmarks = newBookmarks;
+  }
+  function _setMinimizedForTest(minimized: boolean) {
+    isMinimized = minimized;
+  }
+
   return {
     get bookmarks() { return bookmarks },
     get isMinimized() { return isMinimized },
@@ -93,7 +101,9 @@ function createBookmarkStore() {
     addBookmark,
     deleteBookmark,
     loadBookmark,
-    toggleMinimize
+    toggleMinimize,
+    _setBookmarksForTest,
+    _setMinimizedForTest
   };
 }
 
