@@ -23,7 +23,8 @@ describe('store.svelte.ts', () => {
     // Reset to default state
     store._setStateForTest({
       folders: [{ id: DEFAULT_FOLDER_ID, name: DEFAULT_FOLDER_NAME, createdAt: 1, isExpanded: true }],
-      bookmarks: []
+      bookmarks: [],
+      lastSavedFolderId: DEFAULT_FOLDER_ID
     });
     store._setMinimizedForTest(false);
     
@@ -34,7 +35,8 @@ describe('store.svelte.ts', () => {
     it('should load state and minimized state from storage', async () => {
       const mockState = {
         folders: [{ id: 'f13e4567-e89b-12d3-a456-426614174000', name: 'Builds', createdAt: 100, isExpanded: false }],
-        bookmarks: [{ id: '123e4567-e89b-12d3-a456-426614174000', name: 'Test', url: 'http://test.com', createdAt: 123, folderId: 'f13e4567-e89b-12d3-a456-426614174000' }]
+        bookmarks: [{ id: '123e4567-e89b-12d3-a456-426614174000', name: 'Test', url: 'http://test.com', createdAt: 123, folderId: 'f13e4567-e89b-12d3-a456-426614174000' }],
+        lastSavedFolderId: 'f13e4567-e89b-12d3-a456-426614174000'
       };
       
       (browser.storage.local.get as Mock).mockResolvedValue({
@@ -46,6 +48,7 @@ describe('store.svelte.ts', () => {
 
       expect(store.folders).toEqual(mockState.folders);
       expect(store.bookmarks).toEqual(mockState.bookmarks);
+      expect(store.lastSavedFolderId).toBe(mockState.lastSavedFolderId);
       expect(store.isMinimized).toBe(true);
     });
 
@@ -94,7 +97,8 @@ describe('store.svelte.ts', () => {
         bookmarks: [
           { id: 'b13e4567-e89b-12d3-a456-426614174000', name: 'Keep', url: 'http://a.com', createdAt: 1, folderId: DEFAULT_FOLDER_ID },
           { id: 'b23e4567-e89b-12d3-a456-426614174000', name: 'Delete', url: 'http://b.com', createdAt: 2, folderId: 'f13e4567-e89b-12d3-a456-426614174000' }
-        ]
+        ],
+        lastSavedFolderId: DEFAULT_FOLDER_ID
       });
 
       await store.deleteFolder('f13e4567-e89b-12d3-a456-426614174000');
@@ -108,13 +112,29 @@ describe('store.svelte.ts', () => {
       await store.deleteFolder(DEFAULT_FOLDER_ID);
       expect(store.folders.length).toBe(1); // Still there
     });
+
+    it('should reset lastSavedFolderId to default if the target folder is deleted', async () => {
+      store._setStateForTest({
+        folders: [
+          { id: DEFAULT_FOLDER_ID, name: DEFAULT_FOLDER_NAME, createdAt: 1, isExpanded: true },
+          { id: 'f13e4567-e89b-12d3-a456-426614174000', name: 'Custom Folder', createdAt: 2, isExpanded: true }
+        ],
+        bookmarks: [],
+        lastSavedFolderId: 'f13e4567-e89b-12d3-a456-426614174000' // Target is the custom folder
+      });
+
+      await store.deleteFolder('f13e4567-e89b-12d3-a456-426614174000');
+
+      expect(store.lastSavedFolderId).toBe(DEFAULT_FOLDER_ID);
+    });
   });
 
   describe('Bookmark Actions', () => {
-    it('should add a bookmark to a specific folder', async () => {
+    it('should add a bookmark to a specific folder and update lastSavedFolderId', async () => {
       store._setStateForTest({
         folders: [{ id: 'f13e4567-e89b-12d3-a456-426614174000', name: 'F1', createdAt: 1, isExpanded: true }],
-        bookmarks: []
+        bookmarks: [],
+        lastSavedFolderId: DEFAULT_FOLDER_ID
       });
 
       const uuidSpy = vi.spyOn(crypto, 'randomUUID').mockReturnValue('123e4567-e89b-12d3-a456-426614174000');
@@ -124,6 +144,7 @@ describe('store.svelte.ts', () => {
 
       expect(store.bookmarks.length).toBe(1);
       expect(store.bookmarks[0].folderId).toBe('f13e4567-e89b-12d3-a456-426614174000');
+      expect(store.lastSavedFolderId).toBe('f13e4567-e89b-12d3-a456-426614174000');
 
       uuidSpy.mockRestore();
       nowSpy.mockRestore();
@@ -138,6 +159,7 @@ describe('store.svelte.ts', () => {
       
       expect(store.bookmarks.length).toBe(1);
       expect(store.bookmarks[0].folderId).toBe(DEFAULT_FOLDER_ID);
+      expect(store.lastSavedFolderId).toBe(DEFAULT_FOLDER_ID);
       
       uuidSpy.mockRestore();
       nowSpy.mockRestore();
