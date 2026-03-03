@@ -1,0 +1,33 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background-color: #111111;
+  color: #dfcf99;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 15px rgba(0,0,0,0.8);
+  border-right: 1px solid #3a3a3a;
+  font-family: 'Fontin Regular', sans-serif;
+  transition: width 0.3s ease;
+  overflow: hidden;
+}
+
+.sidebar.minimized {
+  width: 40px;
+}
+
+.minimized-view {
+  display: flex;
+  justify-content: center;
+  padding-top: 15px;
+  height: 100%;
+  cursor: pointer;
+}
+
+.minimized-view:hover {
+  background-color: #1a1a1a;
+}
