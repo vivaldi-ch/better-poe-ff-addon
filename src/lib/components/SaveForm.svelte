@@ -23,6 +23,16 @@
     isSaving = false;
     newBookmarkName = '';
   }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      confirmSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelSave();
+    }
+  }
 </script>
 
 <div class="actions">
@@ -33,11 +43,11 @@
         type="text" 
         bind:value={newBookmarkName} 
         placeholder="Bookmark name..."
-        onkeydown={(e) => e.key === 'Enter' && confirmSave()}
+        onkeydown={handleKeyDown}
         autofocus
       />
       
-      <select bind:value={selectedFolderId} class="folder-select">
+      <select bind:value={selectedFolderId} class="folder-select" onkeydown={handleKeyDown}>
         {#each store.folders as folder}
           <option value={folder.id}>{folder.name}</option>
         {/each}

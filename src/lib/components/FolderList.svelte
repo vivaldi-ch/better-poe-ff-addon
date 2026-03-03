@@ -21,6 +21,15 @@
     isCreatingFolder = false;
     newFolderName = '';
   }
+  
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent form submission or bubbling
+      confirmCreate();
+    } else if (e.key === 'Escape') {
+      cancelCreate();
+    }
+  }
 </script>
 
 <div class="folder-list-container">
@@ -32,7 +41,7 @@
           type="text" 
           bind:value={newFolderName} 
           placeholder="New folder name..."
-          onkeydown={(e) => e.key === 'Enter' && confirmCreate()}
+          onkeydown={handleKeyDown}
           autofocus
         />
         <button class="btn-icon" onclick={confirmCreate} title="Save Folder">✓</button>
