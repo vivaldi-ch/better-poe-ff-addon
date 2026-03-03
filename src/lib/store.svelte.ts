@@ -1,24 +1,27 @@
 import browser from 'webextension-polyfill';
-import { BookmarkArraySchema, type Bookmark } from './types';
+import { StorageStateSchema, type Bookmark, type Folder, type StorageState } from './types';
+
+// A default folder ID so we always have somewhere to put things if the user hasn't made a folder
+export const DEFAULT_FOLDER_ID = '00000000-0000-0000-0000-000000000000';
+export const DEFAULT_FOLDER_NAME = 'Uncategorized';
 
 function createBookmarkStore() {
-  let bookmarks = $state<Bookmark[]>([]);
+  let state = $state<StorageState>({
+    folders: [{ id: DEFAULT_FOLDER_ID, name: DEFAULT_FOLDER_NAME, createdAt: 1, isExpanded: true }],
+    bookmarks: []
+  });
   let isMinimized = $state(false);
 
   async function init() {
     try {
-      const result = await browser.storage.local.get(['poe_bookmarks', 'poe_sidebar_minimized']);
+      const result = await browser.storage.local.get(['poe_state', 'poe_sidebar_minimized']);
       
-      // 1. SAFELY LOAD: Validate incoming storage data at runtime
-      if (result.poe_bookmarks !== undefined) {
-        const parsed = BookmarkArraySchema.safeParse(result.poe_bookmarks);
+      if (result.poe_state !== undefined) {
+        const parsed = StorageStateSchema.safeParse(result.poe_state);
         if (parsed.success) {
-          bookmarks = parsed.data;
+          state = parsed.data;
         } else {
           console.error('[PoE Extension] Storage corruption detected on load!', parsed.error);
-          // If completely corrupted, default to empty to prevent UI crashes.
-          // In a real app, we might offer a "recover" or "reset" prompt here.
-          bookmarks = []; 
         }
       }
       
@@ -29,80 +32,120 @@ function createBookmarkStore() {
       console.error('Failed to load state', e);
     }
 
-    // 2. SAFELY SYNC: Validate incoming changes from other tabs/contexts
     browser.storage.onChanged.addListener((changes, area) => {
-      if (area === 'local' && changes.poe_bookmarks?.newValue) {
-        const parsed = BookmarkArraySchema.safeParse(changes.poe_bookmarks.newValue);
+      if (area === 'local' && changes.poe_state?.newValue) {
+        const parsed = StorageStateSchema.safeParse(changes.poe_state.newValue);
         if (parsed.success) {
-          bookmarks = parsed.data;
-        } else {
-          console.warn('[PoE Extension] Ignoring corrupted sync data from other context.', parsed.error);
+          state = parsed.data;
         }
       }
     });
   }
 
-  async function saveBookmarksToStorage(updatedBookmarks: Bookmark[]) {
-    // 3. SAFELY SAVE: Validate data before committing to disk
-    const parsed = BookmarkArraySchema.safeParse(updatedBookmarks);
+  async function saveStateToStorage(newState: StorageState) {
+    const parsed = StorageStateSchema.safeParse(newState);
     
     if (!parsed.success) {
       console.error('[PoE Extension] Prevented saving corrupted data to storage!', parsed.error);
-      return; // Abort save operation to protect existing valid data on disk
+      return;
     }
 
-    bookmarks = parsed.data; // Update local state with the guaranteed clean data
-    
-    // Strip Svelte proxies before passing to extension storage API to avoid DataCloneError
-    const rawBookmarks = $state.snapshot(parsed.data);
-    await browser.storage.local.set({ poe_bookmarks: rawBookmarks });
+    state = parsed.data;
+    const rawState = $state.snapshot(parsed.data);
+    await browser.storage.local.set({ poe_state: rawState });
   }
 
-  async function addBookmark(name: string, url: string) {
+  // --- Folder Actions ---
+  async function addFolder(name: string) {
+    if (!name.trim()) return;
+    const newFolder: Folder = {
+      id: crypto.randomUUID(),
+      name: name.trim(),
+      createdAt: Date.now(),
+      isExpanded: true
+    };
+    await saveStateToStorage({
+      ...state,
+      folders: [...state.folders, newFolder]
+    });
+  }
+
+  async function deleteFolder(folderId: string) {
+    if (folderId === DEFAULT_FOLDER_ID) return; // Prevent deleting the fallback folder
+    
+    // Deleting a folder also deletes all its child bookmarks
+    await saveStateToStorage({
+      folders: state.folders.filter(f => f.id !== folderId),
+      bookmarks: state.bookmarks.filter(b => b.folderId !== folderId)
+    });
+  }
+
+  async function toggleFolderExpanded(folderId: string) {
+    await saveStateToStorage({
+      ...state,
+      folders: state.folders.map(f => f.id === folderId ? { ...f, isExpanded: !f.isExpanded } : f)
+    });
+  }
+
+  // --- Bookmark Actions ---
+  async function addBookmark(name: string, url: string, folderId: string) {
     if (!name.trim()) return;
 
-    const newBookmark = {
+    // Ensure the folder exists, otherwise fallback to default
+    const validFolderId = state.folders.some(f => f.id === folderId) ? folderId : DEFAULT_FOLDER_ID;
+
+    const newBookmark: Bookmark = {
       id: crypto.randomUUID(),
       name: name.trim(),
       url: url,
       createdAt: Date.now(),
+      folderId: validFolderId
     };
 
-    const updated = [...bookmarks, newBookmark];
-    await saveBookmarksToStorage(updated);
+    await saveStateToStorage({
+      ...state,
+      bookmarks: [...state.bookmarks, newBookmark]
+    });
   }
 
   async function deleteBookmark(id: string) {
-    const updated = bookmarks.filter(b => b.id !== id);
-    await saveBookmarksToStorage(updated);
+    await saveStateToStorage({
+      ...state,
+      bookmarks: state.bookmarks.filter(b => b.id !== id)
+    });
   }
 
   function loadBookmark(url: string) {
     window.location.href = url;
   }
 
+  // --- UI Actions ---
   async function toggleMinimize() {
     isMinimized = !isMinimized;
     await browser.storage.local.set({ poe_sidebar_minimized: isMinimized });
   }
 
   // Internal test helper
-  function _setBookmarksForTest(newBookmarks: Bookmark[]) {
-    bookmarks = newBookmarks;
+  function _setStateForTest(newState: StorageState) {
+    state = newState;
   }
   function _setMinimizedForTest(minimized: boolean) {
     isMinimized = minimized;
   }
 
   return {
-    get bookmarks() { return bookmarks },
+    get folders() { return state.folders },
+    get bookmarks() { return state.bookmarks },
     get isMinimized() { return isMinimized },
     init,
+    addFolder,
+    deleteFolder,
+    toggleFolderExpanded,
     addBookmark,
     deleteBookmark,
     loadBookmark,
     toggleMinimize,
-    _setBookmarksForTest,
+    _setStateForTest,
     _setMinimizedForTest
   };
 }

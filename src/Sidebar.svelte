@@ -5,7 +5,7 @@
   import { store } from './lib/store.svelte';
   import Header from './lib/components/Header.svelte';
   import SaveForm from './lib/components/SaveForm.svelte';
-  import BookmarkList from './lib/components/BookmarkList.svelte';
+  import FolderList from './lib/components/FolderList.svelte';
 
   $effect(() => {
     const hostNode = document.querySelector('#poe-extension-host') as HTMLElement;
@@ -31,7 +31,7 @@
   {:else}
     <Header />
     <SaveForm />
-    <BookmarkList />
+    <FolderList />
   {/if}
 </div>
 

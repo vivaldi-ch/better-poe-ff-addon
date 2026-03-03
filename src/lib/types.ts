@@ -5,11 +5,23 @@ export const BookmarkSchema = z.object({
   name: z.string().min(1, "Name cannot be empty").max(100, "Name is too long"),
   url: z.string().url("Must be a valid URL"),
   createdAt: z.number().int().positive(),
+  folderId: z.string().uuid(), // Links back to parent folder
 });
 
-// Infer the TypeScript type directly from the Zod schema
-// This ensures our types and our runtime validation are always perfectly in sync
-export type Bookmark = z.infer<typeof BookmarkSchema>;
+export const FolderSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1, "Folder name cannot be empty").max(50, "Folder name is too long"),
+  createdAt: z.number().int().positive(),
+  isExpanded: z.boolean().default(false), // UI state saved so it remembers what was open
+});
 
-// Array schema for bulk loading/saving
-export const BookmarkArraySchema = z.array(BookmarkSchema);
+export type Bookmark = z.infer<typeof BookmarkSchema>;
+export type Folder = z.infer<typeof FolderSchema>;
+
+// The entire state to be saved
+export const StorageStateSchema = z.object({
+  folders: z.array(FolderSchema),
+  bookmarks: z.array(BookmarkSchema)
+});
+
+export type StorageState = z.infer<typeof StorageStateSchema>;

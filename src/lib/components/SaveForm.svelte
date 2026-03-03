@@ -1,17 +1,20 @@
 <script lang="ts">
-  import { store } from '../store.svelte';
+  import { store, DEFAULT_FOLDER_ID } from '../store.svelte';
 
   let isSaving = $state(false);
   let newBookmarkName = $state('');
+  let selectedFolderId = $state(DEFAULT_FOLDER_ID);
 
   function startSaving() {
     isSaving = true;
     newBookmarkName = '';
+    // Default to the first folder if it exists, otherwise the unchangeable default
+    selectedFolderId = store.folders.length > 0 ? store.folders[0].id : DEFAULT_FOLDER_ID;
   }
 
   async function confirmSave() {
     if (!newBookmarkName.trim()) return;
-    await store.addBookmark(newBookmarkName, window.location.href);
+    await store.addBookmark(newBookmarkName, window.location.href, selectedFolderId);
     isSaving = false;
     newBookmarkName = '';
   }
@@ -33,6 +36,13 @@
         onkeydown={(e) => e.key === 'Enter' && confirmSave()}
         autofocus
       />
+      
+      <select bind:value={selectedFolderId} class="folder-select">
+        {#each store.folders as folder}
+          <option value={folder.id}>{folder.name}</option>
+        {/each}
+      </select>
+
       <div class="save-buttons">
         <button class="btn-confirm" onclick={confirmSave}>Save</button>
         <button class="btn-cancel" onclick={cancelSave}>Cancel</button>
@@ -55,18 +65,23 @@
     gap: 8px;
   }
 
-  input[type="text"] {
+  input[type="text"], .folder-select {
     background-color: #000;
     border: 1px solid #444;
     color: #eee;
     padding: 8px;
     border-radius: 2px;
     font-family: inherit;
+    font-size: 0.95rem;
   }
 
-  input[type="text"]:focus {
+  input[type="text"]:focus, .folder-select:focus {
     outline: none;
     border-color: #a38d6d;
+  }
+
+  .folder-select {
+    cursor: pointer;
   }
 
   .save-buttons {
