@@ -78,7 +78,7 @@
         onfinalize={handleDndFinalize as any}
       >
         {#each folderBookmarks as bookmark (bookmark.id)}
-          <div animate:flip={{ duration: 300 }}>
+          <div animate:flip={{ duration: 300 }} class="bookmark-wrapper">
             <div class="bookmark-item">
               <!-- svelte-ignore a11y_click_events_have_key_events -->
               <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -130,11 +130,12 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-size: 1.25rem; /* Increased size to match 20% bump request */
   }
 
   .folder-count {
     color: #666;
-    font-size: 0.85em;
+    font-size: 1rem;
     margin: 0 8px;
   }
 
@@ -144,7 +145,7 @@
     color: #555;
     cursor: pointer;
     padding: 2px 6px;
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
 
   .btn-delete-folder:hover {
@@ -177,8 +178,16 @@
     transform: translate(-50%, -50%);
     color: #555;
     font-style: italic;
-    font-size: 0.9em;
+    font-size: 1rem;
     pointer-events: none; /* Crucial so it doesn't block drops */
+  }
+
+  .bookmark-wrapper {
+    margin-bottom: 8px; /* Added spacing between items */
+  }
+
+  .bookmark-wrapper:last-child {
+    margin-bottom: 0;
   }
 
   /* Bookmark item styles matched from previous list */
@@ -188,13 +197,8 @@
     justify-content: space-between;
     background-color: #1a1a1a;
     border: 1px solid #333;
-    margin-bottom: 4px;
     border-radius: 3px;
     transition: border-color 0.2s;
-  }
-
-  .bookmark-item:last-child {
-    margin-bottom: 0;
   }
 
   .bookmark-item:hover {
@@ -203,12 +207,12 @@
 
   .bookmark-name {
     flex: 1;
-    padding: 6px 10px;
+    padding: 10px; /* Increased padding */
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 0.95em;
+    font-size: 1.15rem; /* Converted to rem for consistency */
   }
 
   .bookmark-name:hover {
@@ -220,8 +224,8 @@
     background: none;
     border: none;
     color: #888;
-    padding: 4px 8px;
-    font-size: 0.9rem;
+    padding: 8px; /* Increased hit area */
+    font-size: 1rem;
     cursor: pointer;
   }
 

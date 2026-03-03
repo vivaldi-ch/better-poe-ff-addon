@@ -11,7 +11,7 @@
   flex-direction: column;
   box-shadow: 4px 0 15px rgba(0,0,0,0.8);
   border-right: 1px solid #3a3a3a;
-  font-family: 'Fontin Regular', sans-serif;
+  font-family: 'FontinSmallcaps', 'Georgia', serif;
   transition: width 0.3s ease;
   overflow: hidden;
 }
@@ -30,4 +30,8 @@
 
 .minimized-view:hover {
   background-color: #1a1a1a;
+}
+
+button {
+  font-family: 'FontinSmallcaps', 'Georgia', serif;
 }

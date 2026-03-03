@@ -1,7 +1,5 @@
 import './Sidebar.svelte';
 
-console.log('--- BETTER POE TRADING EXTENSION CONTENT SCRIPT INJECTED ---');
-
 function init() {
   if (document.querySelector('#poe-extension-host')) return;
 

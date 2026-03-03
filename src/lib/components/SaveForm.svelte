@@ -86,8 +86,8 @@
     color: #eee;
     padding: 8px;
     border-radius: 2px;
-    font-family: inherit;
-    font-size: 0.95rem;
+    font-family: 'FontinSmallcaps', 'Georgia', serif;
+    font-size: 1.2rem;
   }
 
   input[type="text"]:focus, .folder-select:focus {
@@ -105,7 +105,7 @@
   }
 
   button {
-    font-family: inherit;
+    font-family: 'FontinSmallcaps', 'Georgia', serif;
     border: 1px solid #444;
     padding: 6px 12px;
     cursor: pointer;
@@ -127,7 +127,7 @@
     border-color: #a38d6d;
     color: #e2d6b5;
     padding: 10px;
-    font-size: 0.95rem;
+    font-size: 1.2rem;
   }
 
   .btn-primary:hover {

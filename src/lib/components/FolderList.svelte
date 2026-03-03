@@ -104,14 +104,14 @@
   }
 
   .btn-text {
+    font-family: 'FontinSmallcaps', 'Georgia', serif;
     background: none;
     border: none;
     color: #a38d6d;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     padding: 0;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   .btn-text:hover {
@@ -130,8 +130,8 @@
     color: #eee;
     padding: 4px 8px;
     border-radius: 2px;
-    font-family: inherit;
-    font-size: 0.9rem;
+    font-family: 'FontinSmallcaps', 'Georgia', serif;
+    font-size: 1.2rem;
   }
 
   input[type="text"]:focus {
