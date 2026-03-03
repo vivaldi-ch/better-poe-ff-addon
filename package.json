@@ -21,6 +21,7 @@
     "vite-plugin-web-extension": "^4.5.0"
   },
   "dependencies": {
-    "webextension-polyfill": "^0.12.0"
+    "webextension-polyfill": "^0.12.0",
+    "zod": "^4.3.6"
   }
 }
