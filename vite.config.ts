@@ -10,4 +10,7 @@ export default defineConfig({
       browser: process.env.TARGET || 'firefox'
     })
   ],
+  build: {
+    assetsInlineLimit: 100000000,
+  }
 })

@@ -91,6 +91,13 @@ function createBookmarkStore() {
     });
   }
 
+  async function updateFolderDetails(folderId: string, details: Partial<Folder>) {
+    await saveStateToStorage({
+      ...state,
+      folders: state.folders.map(f => f.id === folderId ? { ...f, ...details } : f)
+    });
+  }
+
   async function updateFoldersOrder(newFolders: Folder[]) {
     // Ensure the default folder is preserved if it's hidden from the UI
     const defaultFolder = state.folders.find(f => f.id === DEFAULT_FOLDER_ID);
@@ -174,6 +181,7 @@ function createBookmarkStore() {
     deleteFolder,
     toggleFolderExpanded,
     updateFoldersOrder,
+    updateFolderDetails,
     addBookmark,
     deleteBookmark,
     updateFolderBookmarks,

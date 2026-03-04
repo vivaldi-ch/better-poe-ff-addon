@@ -13,6 +13,8 @@ export const FolderSchema = z.object({
   name: z.string().min(1, "Folder name cannot be empty").max(50, "Folder name is too long"),
   createdAt: z.number().int().positive(),
   isExpanded: z.boolean().default(false), // UI state saved so it remembers what was open
+  color: z.string().optional(),
+  icon: z.string().optional(),
 });
 
 export type Bookmark = z.infer<typeof BookmarkSchema>;

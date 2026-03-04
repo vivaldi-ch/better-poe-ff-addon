@@ -3,6 +3,7 @@
   import { dndzone, type DndEvent, TRIGGERS } from 'svelte-dnd-action';
   import { flip } from 'svelte/animate';
   import type { Bookmark } from '../types';
+  import FolderEditForm from './FolderEditForm.svelte';
 
   let { folder } = $props<{ folder: import('../types').Folder }>();
 
@@ -10,14 +11,41 @@
   let isHoveringDrop = $state(false);
 
   let isSaving = $state(false);
+  let isEditingFolder = $state(false);
   let newBookmarkName = $state('');
+
+  // Editing state for live preview
+  let editingName = $state(folder.name);
+  let editingColor = $state(folder.color || '#a38d6d');
+  let editingIcon = $state(folder.icon || '');
+
+  // Derived display values
+  let displayName = $derived(isEditingFolder ? editingName : folder.name);
+  let displayColor = $derived(isEditingFolder ? editingColor : (folder.color || '#a38d6d'));
+  let displayIcon = $derived(isEditingFolder ? editingIcon : folder.icon);
 
   $effect(() => {
     folderBookmarks = store.bookmarks.filter(b => b.folderId === folder.id);
   });
 
+  // Keep editing state in sync if folder changes externally
+  $effect(() => {
+    if (!isEditingFolder) {
+      editingName = folder.name;
+      editingColor = folder.color || '#a38d6d';
+      editingIcon = folder.icon || '';
+    }
+  });
+
   function handleToggle() {
-    store.toggleFolderExpanded(folder.id);
+    if (!isEditingFolder) {
+      store.toggleFolderExpanded(folder.id);
+    }
+  }
+
+  function handleEditFolder(e: MouseEvent) {
+    e.stopPropagation();
+    isEditingFolder = true;
   }
 
   function handleDelete(e: MouseEvent) {
@@ -32,7 +60,6 @@
   function handleDndConsider(e: CustomEvent<DndEvent<Bookmark>>) {
     folderBookmarks = e.detail.items;
     
-    // svelte-dnd-action fires info about drop state
     const info = e.detail.info;
     if (info) {
         if (info.trigger === TRIGGERS.DRAGGED_ENTERED) {
@@ -75,22 +102,65 @@
       cancelSave();
     }
   }
+
+  function getTranslucentColor(hex: string, opacity: number) {
+    if (!hex) return `rgba(163, 141, 109, ${opacity})`;
+    
+    let r = 0, g = 0, b = 0;
+    if (hex.length === 4) {
+      r = parseInt(hex[1] + hex[1], 16);
+      g = parseInt(hex[2] + hex[2], 16);
+      b = parseInt(hex[3] + hex[3], 16);
+    } else if (hex.length === 7) {
+      r = parseInt(hex.substring(1, 3), 16);
+      g = parseInt(hex.substring(3, 5), 16);
+      b = parseInt(hex.substring(5, 7), 16);
+    }
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
 </script>
 
-<div class="folder">
+<div 
+  class="folder" 
+  style:border-color={displayColor}
+  style:background-color={getTranslucentColor(displayColor, 0.05)}
+>
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="folder-header" onclick={handleToggle}>
-    <span class="folder-icon">{folder.isExpanded ? '📂' : '📁'}</span>
-    <span class="folder-name">{folder.name}</span>
+  <div 
+    class="folder-header" 
+    onclick={handleToggle}
+    style:background-color={getTranslucentColor(displayColor, 0.25)}
+  >
+    {#if displayIcon}
+      <div class="header-icon-bg" style:background-image="url({displayIcon})"></div>
+    {/if}
+    
+    {#if !displayIcon}
+      <span class="folder-status-icon">{folder.isExpanded ? '📂' : '📁'}</span>
+    {/if}
+
+    <span class="folder-name">{displayName}</span>
     <span class="folder-count">({folderBookmarks.length})</span>
     
-    {#if folder.id !== DEFAULT_FOLDER_ID}
-      <button class="btn-delete-folder" onclick={handleDelete} aria-label="Delete folder" title="Delete folder">✕</button>
-    {/if}
+    <div class="header-actions">
+      <button class="btn-icon btn-edit-folder" onclick={handleEditFolder} aria-label="Edit folder" title="Edit folder">✎</button>
+      {#if folder.id !== DEFAULT_FOLDER_ID}
+        <button class="btn-icon btn-delete-folder" onclick={handleDelete} aria-label="Delete folder" title="Delete folder">✕</button>
+      {/if}
+    </div>
   </div>
 
-  {#if folder.isExpanded}
+  {#if isEditingFolder}
+    <FolderEditForm 
+      {folder} 
+      bind:name={editingName}
+      bind:color={editingColor}
+      bind:icon={editingIcon}
+      onCancel={() => isEditingFolder = false} 
+      onSave={() => isEditingFolder = false} 
+    />
+  {:else if folder.isExpanded}
     <div class="folder-body">
       {#if folderBookmarks.length === 0 && !isHoveringDrop}
         <div class="empty-folder">Empty</div>
@@ -101,7 +171,7 @@
         use:dndzone={{ 
             items: folderBookmarks, 
             flipDurationMs: 300, 
-            dropTargetStyle: {}, // disable default inline styles 
+            dropTargetStyle: {}, 
             type: 'bookmark' 
         }}
         onconsider={handleDndConsider as any}
@@ -152,51 +222,89 @@
     border: 1px solid #2a2a2a;
     border-radius: 4px;
     overflow: hidden;
+    transition: all 0.2s;
   }
 
   .folder-header {
     display: flex;
     align-items: center;
-    padding: 8px 10px;
-    background-color: #1f1f1f;
+    padding: 10px;
     cursor: pointer;
     user-select: none;
     border-bottom: 1px solid transparent;
     transition: background-color 0.2s;
+    position: relative;
+    /* Removed min-height */
   }
 
   .folder-header:hover {
-    background-color: #2a2a2a;
+    background-color: rgba(255, 255, 255, 0.08);
   }
 
-  .folder-icon {
+  .header-icon-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 60%;
+    background-size: cover;
+    background-position: left center;
+    background-repeat: no-repeat;
+    opacity: 0.7;
+    mask-image: linear-gradient(to right, black 20%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 20%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .folder-status-icon {
     margin-right: 8px;
-    font-size: 1.1rem;
+    font-size: 1rem;
+    position: relative;
+    z-index: 1;
   }
 
   .folder-name {
     flex: 1;
     font-weight: bold;
-    color: #e2d6b5;
+    color: #fff; /* White text for better visibility */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 1.25rem; /* Increased size to match 20% bump request */
+    font-size: 1.25rem;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 1px rgba(0,0,0,1);
   }
 
   .folder-count {
-    color: #666;
-    font-size: 1rem;
+    color: #bbb;
+    font-size: 0.95rem;
     margin: 0 8px;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
   }
 
-  .btn-delete-folder {
+  .header-actions {
+    display: flex;
+    gap: 2px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .btn-icon {
     background: none;
     border: none;
-    color: #555;
+    color: #888;
     cursor: pointer;
-    padding: 2px 6px;
-    font-size: 1rem;
+    padding: 2px 4px;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+  }
+
+  .btn-icon:hover {
+    color: #fff;
   }
 
   .btn-delete-folder:hover {
@@ -204,8 +312,8 @@
   }
 
   .folder-body {
-    background-color: #111;
-    border-top: 1px solid #2a2a2a;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
     position: relative;
     padding: 6px;
   }
@@ -229,24 +337,23 @@
     transform: translate(-50%, -50%);
     color: #555;
     font-style: italic;
-    font-size: 1rem;
-    pointer-events: none; /* Crucial so it doesn't block drops */
+    font-size: 0.95rem;
+    pointer-events: none;
   }
 
   .bookmark-wrapper {
-    margin-bottom: 8px; /* Added spacing between items */
+    margin-bottom: 6px;
   }
 
   .bookmark-wrapper:last-child {
     margin-bottom: 0;
   }
 
-  /* Bookmark item styles matched from previous list */
   .bookmark-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #1a1a1a;
+    background-color: rgba(20, 20, 20, 0.8);
     border: 1px solid #333;
     border-radius: 3px;
     transition: border-color 0.2s;
@@ -254,16 +361,18 @@
 
   .bookmark-item:hover {
     border-color: #555;
+    background-color: rgba(30, 30, 30, 0.9);
   }
 
   .bookmark-name {
     flex: 1;
-    padding: 10px; /* Increased padding */
+    padding: 8px 10px;
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 1.15rem; /* Converted to rem for consistency */
+    font-size: 1.1rem;
+    color: #ccc;
   }
 
   .bookmark-name:hover {
@@ -274,9 +383,9 @@
     flex: 0 0 auto;
     background: none;
     border: none;
-    color: #888;
-    padding: 8px; /* Increased hit area */
-    font-size: 1rem;
+    color: #666;
+    padding: 8px;
+    font-size: 0.9rem;
     cursor: pointer;
   }
 
@@ -292,13 +401,14 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    padding: 4px;
   }
 
   input[type="text"] {
     background-color: #000;
     border: 1px solid #444;
     color: #eee;
-    padding: 8px;
+    padding: 6px 10px;
     border-radius: 2px;
     font-family: 'FontinSmallcaps', 'Georgia', serif;
     font-size: 1.1rem;
@@ -317,7 +427,7 @@
   button.btn-base {
     font-family: 'FontinSmallcaps', 'Georgia', serif;
     border: 1px solid #444;
-    padding: 6px 12px;
+    padding: 6px 10px;
     cursor: pointer;
     border-radius: 2px;
     background-color: #222;
@@ -326,35 +436,28 @@
     transition: all 0.2s;
   }
 
-  button.btn-base:hover {
-    background-color: #333;
-    border-color: #555;
-  }
-
   .btn-primary {
     width: 100%;
-    background-color: #2a2a2a;
-    border-color: #a38d6d;
-    color: #e2d6b5;
+    background-color: #1a1a1a;
+    border: 1px solid #444;
+    color: #aaa;
     padding: 8px;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-family: 'FontinSmallcaps', 'Georgia', serif;
     cursor: pointer;
     border-radius: 2px;
+    transition: all 0.2s;
   }
 
   .btn-primary:hover {
-    background-color: #3a3324;
-    border-color: #c4a983;
+    background-color: #2a2a2a;
+    color: #e2d6b5;
+    border-color: #a38d6d;
   }
 
   .btn-confirm {
     background-color: #1e3a24;
     border-color: #3b6343;
     color: #9bd4a9;
-  }
-  
-  .btn-confirm:hover {
-    background-color: #2a5233;
   }
 </style>
