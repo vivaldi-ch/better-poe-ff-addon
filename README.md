@@ -1,47 +1,85 @@
-# Svelte + TS + Vite
+# Better PoE Trading Extension
 
-This template should help get you started developing with Svelte and TypeScript in Vite.
+A Firefox browser extension (Manifest V3) designed to enhance the Path of Exile trade experience by providing a contextual, in-page bookmarking system.
 
-## Recommended IDE Setup
+## Overview
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+The official Path of Exile trade website is powerful but lacks persistent state management for complex searches. This extension injects a collapsible sidebar directly into the trade site, allowing users to save, name, and organize their searches into a hierarchical folder system without leaving the page.
 
-## Need an official Svelte framework?
+## Key Features
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+- **In-Page Sidebar:** A seamless, collapsible UI injected directly into `pathofexile.com/trade`.
+- **Hierarchical Folders:** Create and manage folders to group related searches.
+- **Customization:**
+  - **Folders:** Customize with PoE-themed icons and specific colors. Icons feature a cinematic fade-out effect.
+  - **Bookmarks:** Customize with names, colors, and circular, bordered icons.
+- **Drag & Drop:** Reorder folders and move bookmarks between folders with ease.
+- **Live Preview:** Real-time visual updates in the header while editing folder or bookmark details.
+- **Persistent State:** All configurations are saved locally via `browser.storage.local`.
 
-## Technical considerations
+## Technical Stack
 
-**Why use this over SvelteKit?**
+- **Framework:** [Svelte 5](https://svelte.dev/)
+- **Build Tool:** [Vite](https://vitejs.dev/)
+- **Language:** TypeScript
+- **Styling:** Vanilla CSS
+- **Utilities:** 
+  - `svelte-dnd-action` for drag-and-drop.
+  - `zod` for state validation.
+  - `vite-plugin-web-extension` for extension bundling.
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
+## Getting Started
 
-This template contains as little as possible to get started with Vite + TypeScript + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
+### Prerequisites
 
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
+- [Node.js](https://nodejs.org/) (Latest LTS recommended)
+- [npm](https://www.npmjs.com/)
 
-**Why `global.d.ts` instead of `compilerOptions.types` inside `jsconfig.json` or `tsconfig.json`?**
+### Installation
 
-Setting `compilerOptions.types` shuts out all other types not explicitly listed in the configuration. Using triple-slash references keeps the default TypeScript setting of accepting type information from the entire workspace, while also adding `svelte` and `vite/client` type information.
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd better-poe-ff-addon
+   ```
 
-**Why include `.vscode/extensions.json`?**
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
+### Development
 
-**Why enable `allowJs` in the TS template?**
-
-While `allowJs: false` would indeed prevent the use of `.js` files in the project, it does not prevent the use of JavaScript syntax in `.svelte` files. In addition, it would force `checkJs: false`, bringing the worst of both worlds: not being able to guarantee the entire codebase is TypeScript, and also having worse typechecking for the existing JavaScript. In addition, there are valid use cases in which a mixed codebase may be relevant.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/rixo/svelte-hmr#svelte-hmr).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```ts
-// store.ts
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
+Run the development server with hot-reloading:
+```bash
+npm run dev
 ```
+*Note: The extension targets Firefox by default. You can change the target by setting the `TARGET` environment variable.*
+
+### Building
+
+To build the extension for production:
+```bash
+npm run build
+```
+The build artifacts will be located in the `dist/` directory.
+
+### Loading in Firefox
+
+1. Open Firefox and navigate to `about:debugging`.
+2. Click on "This Firefox" in the sidebar.
+3. Click "Load Temporary Add-on...".
+4. Select the `manifest.json` file from the `dist/` directory (after running `npm run build`) or from the project root if running in dev mode.
+
+## Project Structure
+
+- `src/content.ts`: Handles the injection of the sidebar into the PoE trade site.
+- `src/Sidebar.svelte`: The main entry point for the sidebar UI.
+- `src/lib/store.svelte.ts`: Svelte 5 reactive store for managing state and persistence.
+- `src/lib/components/`: Reusable Svelte components (Folders, Bookmarks, Edit Forms).
+- `src/lib/assets/`: PoE-themed icons and images.
+- `src/lib/constants.ts`: Shared constants like the PoE color palette.
+
+## License
+
+MIT
