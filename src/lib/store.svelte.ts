@@ -139,6 +139,13 @@ function createBookmarkStore() {
     });
   }
 
+  async function updateBookmarkDetails(id: string, details: Partial<Bookmark>) {
+    await saveStateToStorage({
+      ...state,
+      bookmarks: state.bookmarks.map(b => b.id === id ? { ...b, ...details } : b)
+    });
+  }
+
   async function updateFolderBookmarks(folderId: string, newFolderBookmarks: Bookmark[]) {
     // 1. We must synchronously calculate new bookmarks to avoid race conditions when dragging between folders
     const otherBookmarks = state.bookmarks.filter(
@@ -184,6 +191,7 @@ function createBookmarkStore() {
     updateFolderDetails,
     addBookmark,
     deleteBookmark,
+    updateBookmarkDetails,
     updateFolderBookmarks,
     loadBookmark,
     toggleMinimize,

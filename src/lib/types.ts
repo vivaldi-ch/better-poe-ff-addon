@@ -6,6 +6,8 @@ export const BookmarkSchema = z.object({
   url: z.string().url("Must be a valid URL"),
   createdAt: z.number().int().positive(),
   folderId: z.string().uuid(), // Links back to parent folder
+  color: z.string().optional(),
+  icon: z.string().optional(),
 });
 
 export const FolderSchema = z.object({

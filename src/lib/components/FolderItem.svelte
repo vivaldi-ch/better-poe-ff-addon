@@ -6,6 +6,7 @@
   import { flip } from 'svelte/animate';
   import type { Bookmark } from '../types';
   import FolderEditForm from './FolderEditForm.svelte';
+  import BookmarkEditForm from './BookmarkEditForm.svelte';
 
   let { folder } = $props<{ folder: import('../types').Folder }>();
 
@@ -16,12 +17,18 @@
   let isEditingFolder = $state(false);
   let newBookmarkName = $state('');
 
-  // Editing state for live preview
+  // Folder Editing state for live preview
   let editingName = $state(untrack(() => folder.name));
   let editingColor = $state(untrack(() => folder.color || '#a38d6d'));
   let editingIcon = $state(untrack(() => folder.icon || ''));
 
-  // Derived display values
+  // Bookmark Editing state
+  let editingBookmarkId = $state<string | null>(null);
+  let editingBookmarkName = $state('');
+  let editingBookmarkColor = $state('');
+  let editingBookmarkIcon = $state('');
+
+  // Derived folder display values
   let displayName = $derived(isEditingFolder ? editingName : folder.name);
   let displayColor = $derived(isEditingFolder ? editingColor : (folder.color || '#a38d6d'));
   let displayIcon = $derived(isEditingFolder ? editingIcon : folder.icon);
@@ -30,7 +37,7 @@
     folderBookmarks = store.bookmarks.filter(b => b.folderId === folder.id);
   });
 
-  // Keep editing state in sync if folder changes externally
+  // Keep folder editing state in sync if folder changes externally
   $effect(() => {
     if (!isEditingFolder) {
       editingName = folder.name;
@@ -48,6 +55,14 @@
   function handleEditFolder(e: MouseEvent) {
     e.stopPropagation();
     isEditingFolder = true;
+  }
+
+  function handleEditBookmark(e: MouseEvent, bookmark: Bookmark) {
+    e.stopPropagation();
+    editingBookmarkId = bookmark.id;
+    editingBookmarkName = bookmark.name;
+    editingBookmarkColor = bookmark.color || '';
+    editingBookmarkIcon = bookmark.icon || '';
   }
 
   function handleDelete(e: MouseEvent) {
@@ -183,13 +198,38 @@
       >
         {#each folderBookmarks as bookmark (bookmark.id)}
           <div animate:flip={{ duration: 300 }} class="bookmark-wrapper">
-            <div class="bookmark-item">
-              <!-- svelte-ignore a11y_click_events_have_key_events -->
-              <!-- svelte-ignore a11y_no_static_element_interactions -->
-              <div class="bookmark-name" onclick={() => store.loadBookmark(bookmark.url)} title={bookmark.url}>
-                {bookmark.name}
-              </div>
-              <button class="btn-delete" onclick={() => store.deleteBookmark(bookmark.id)} aria-label="Delete">✕</button>
+            <div 
+              class="bookmark-item" 
+              style:background-color={bookmark.id === editingBookmarkId ? getTranslucentColor(editingBookmarkColor, 0.1) : (bookmark.color ? getTranslucentColor(bookmark.color, 0.15) : 'rgba(20, 20, 20, 0.8)')}
+              style:border-color={bookmark.id === editingBookmarkId ? editingBookmarkColor : (bookmark.color || '#333')}
+            >
+              {#if editingBookmarkId === bookmark.id}
+                <BookmarkEditForm 
+                  {bookmark}
+                  bind:name={editingBookmarkName}
+                  bind:color={editingBookmarkColor}
+                  bind:icon={editingBookmarkIcon}
+                  onCancel={() => editingBookmarkId = null}
+                  onSave={() => editingBookmarkId = null}
+                />
+              {:else}
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <div class="bookmark-main" onclick={() => store.loadBookmark(bookmark.url)} title={bookmark.url}>
+                  {#if bookmark.icon}
+                    <div class="bookmark-icon" style:border-color={bookmark.color || '#555'}>
+                      <img src={bookmark.icon} alt="" />
+                    </div>
+                  {/if}
+                  <div class="bookmark-name" style:color={bookmark.color || '#ccc'}>
+                    {bookmark.name}
+                  </div>
+                </div>
+                <div class="bookmark-actions">
+                  <button class="btn-icon" onclick={(e) => handleEditBookmark(e, bookmark)} aria-label="Edit" title="Edit">✎</button>
+                  <button class="btn-delete" onclick={() => store.deleteBookmark(bookmark.id)} aria-label="Delete">✕</button>
+                </div>
+              {/if}
             </div>
           </div>
         {/each}
@@ -355,32 +395,80 @@
 
   .bookmark-item {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     background-color: rgba(20, 20, 20, 0.8);
     border: 1px solid #333;
     border-radius: 3px;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, background-color 0.2s;
+    overflow: hidden;
   }
 
-  .bookmark-item:hover {
+  .bookmark-item:has(.bookmark-main:hover) {
     border-color: #555;
     background-color: rgba(30, 30, 30, 0.9);
   }
 
+  .bookmark-main {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    padding: 6px 8px;
+    cursor: pointer;
+    min-height: 28px;
+  }
+
+  .bookmark-icon {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    margin-right: 8px;
+    border: 1px solid #555;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    background-color: rgba(0,0,0,0.3);
+  }
+
+  .bookmark-icon img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
   .bookmark-name {
     flex: 1;
-    padding: 8px 10px;
-    cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     color: #ccc;
   }
 
-  .bookmark-name:hover {
+  .bookmark-main:hover .bookmark-name {
     color: #fff;
+  }
+
+  .bookmark-actions {
+    display: flex;
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(20, 20, 20, 0.9);
+    padding: 2px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .bookmark-wrapper {
+    position: relative;
+  }
+
+  .bookmark-wrapper:hover .bookmark-actions {
+    opacity: 1;
   }
 
   .btn-delete {
@@ -388,7 +476,7 @@
     background: none;
     border: none;
     color: #666;
-    padding: 8px;
+    padding: 4px 6px;
     font-size: 0.9rem;
     cursor: pointer;
   }
