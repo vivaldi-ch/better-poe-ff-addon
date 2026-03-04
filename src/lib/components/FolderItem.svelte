@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { slide } from 'svelte/transition';
   import { store, DEFAULT_FOLDER_ID } from '../store.svelte';
   import { dndzone, type DndEvent, TRIGGERS } from 'svelte-dnd-action';
   import { flip } from 'svelte/animate';
@@ -153,16 +154,18 @@
   </div>
 
   {#if isEditingFolder}
-    <FolderEditForm 
-      {folder} 
-      bind:name={editingName}
-      bind:color={editingColor}
-      bind:icon={editingIcon}
-      onCancel={() => isEditingFolder = false} 
-      onSave={() => isEditingFolder = false} 
-    />
+    <div transition:slide={{ duration: 300 }}>
+      <FolderEditForm 
+        {folder} 
+        bind:name={editingName}
+        bind:color={editingColor}
+        bind:icon={editingIcon}
+        onCancel={() => isEditingFolder = false} 
+        onSave={() => isEditingFolder = false} 
+      />
+    </div>
   {:else if folder.isExpanded}
-    <div class="folder-body">
+    <div class="folder-body" transition:slide={{ duration: 300 }}>
       {#if folderBookmarks.length === 0 && !isHoveringDrop}
         <div class="empty-folder">Empty</div>
       {/if}
@@ -223,7 +226,7 @@
     border: 1px solid #2a2a2a;
     border-radius: 4px;
     overflow: hidden;
-    transition: all 0.2s;
+    transition: border-color 0.2s, background-color 0.2s;
   }
 
   .folder-header {
@@ -235,7 +238,7 @@
     border-bottom: 1px solid transparent;
     transition: background-color 0.2s;
     position: relative;
-    /* Removed min-height */
+    z-index: 10;
   }
 
   .folder-header:hover {
