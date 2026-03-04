@@ -56,7 +56,7 @@
   </div>
 
   <div class="form-group">
-    <label>Color Options</label>
+    <span class="label">Color Options</span>
     <div class="color-picker">
       {#each colors as c}
         <button 
@@ -74,7 +74,7 @@
   </div>
 
   <div class="form-group">
-    <label>Background Icon</label>
+    <span class="label">Background Icon</span>
     <div class="icon-picker">
       <button 
         class="icon-option none" 

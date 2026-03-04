@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { store, DEFAULT_FOLDER_ID } from '../store.svelte';
   import { dndzone, type DndEvent, TRIGGERS } from 'svelte-dnd-action';
   import { flip } from 'svelte/animate';
@@ -15,9 +16,9 @@
   let newBookmarkName = $state('');
 
   // Editing state for live preview
-  let editingName = $state(folder.name);
-  let editingColor = $state(folder.color || '#a38d6d');
-  let editingIcon = $state(folder.icon || '');
+  let editingName = $state(untrack(() => folder.name));
+  let editingColor = $state(untrack(() => folder.color || '#a38d6d'));
+  let editingIcon = $state(untrack(() => folder.icon || ''));
 
   // Derived display values
   let displayName = $derived(isEditingFolder ? editingName : folder.name);
