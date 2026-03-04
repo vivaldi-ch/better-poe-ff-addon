@@ -12,6 +12,7 @@ function createBookmarkStore() {
     lastSavedFolderId: DEFAULT_FOLDER_ID
   });
   let isMinimized = $state(false);
+  let revertState = $state<StorageState | null>(null);
 
   async function init() {
     try {
@@ -48,12 +49,46 @@ function createBookmarkStore() {
     
     if (!parsed.success) {
       console.error('[PoE Extension] Prevented saving corrupted data to storage!', parsed.error);
-      return;
+      throw new Error('Invalid data format');
     }
 
     state = parsed.data;
     const rawState = $state.snapshot(parsed.data);
     await browser.storage.local.set({ poe_state: rawState });
+  }
+
+  // --- Maintenance Actions ---
+  function getExportBase64() {
+    const json = JSON.stringify($state.snapshot(state));
+    // UTF-8 safe base64
+    return btoa(unescape(encodeURIComponent(json)));
+  }
+
+  async function importFromBase64(base64: string) {
+    try {
+      const json = decodeURIComponent(escape(atob(base64)));
+      const parsed = JSON.parse(json);
+      const validated = StorageStateSchema.safeParse(parsed);
+      
+      if (!validated.success) {
+        throw new Error('Invalid backup format');
+      }
+
+      // Save current state for potential revert (transient)
+      revertState = $state.snapshot(state);
+      
+      await saveStateToStorage(validated.data);
+    } catch (e) {
+      console.error('Import failed', e);
+      throw e;
+    }
+  }
+
+  async function revertImport() {
+    if (!revertState) return;
+    const toRestore = revertState;
+    revertState = null;
+    await saveStateToStorage(toRestore);
   }
 
   // --- Folder Actions ---
@@ -72,10 +107,8 @@ function createBookmarkStore() {
   }
 
   async function deleteFolder(folderId: string) {
-    if (folderId === DEFAULT_FOLDER_ID) return; // Prevent deleting the fallback folder
+    if (folderId === DEFAULT_FOLDER_ID) return;
     
-    // Deleting a folder also deletes all its child bookmarks.
-    // If it was the last saved folder, reset the pointer to default.
     await saveStateToStorage({
       ...state,
       folders: state.folders.filter(f => f.id !== folderId),
@@ -99,24 +132,19 @@ function createBookmarkStore() {
   }
 
   async function updateFoldersOrder(newFolders: Folder[]) {
-    // Ensure the default folder is preserved if it's hidden from the UI
     const defaultFolder = state.folders.find(f => f.id === DEFAULT_FOLDER_ID);
     if (defaultFolder && !newFolders.some(f => f.id === DEFAULT_FOLDER_ID)) {
       state.folders = [defaultFolder, ...newFolders];
     } else {
       state.folders = newFolders;
     }
-    // Sync state immediately for UI fluidity
     await saveStateToStorage(state);
   }
 
   // --- Bookmark Actions ---
   async function addBookmark(name: string, url: string, folderId: string) {
     if (!name.trim()) return;
-
-    // Ensure the folder exists, otherwise fallback to default
     const validFolderId = state.folders.some(f => f.id === folderId) ? folderId : DEFAULT_FOLDER_ID;
-
     const newBookmark: Bookmark = {
       id: crypto.randomUUID(),
       name: name.trim(),
@@ -124,11 +152,10 @@ function createBookmarkStore() {
       createdAt: Date.now(),
       folderId: validFolderId
     };
-
     await saveStateToStorage({
       ...state,
       bookmarks: [...state.bookmarks, newBookmark],
-      lastSavedFolderId: validFolderId // Remember this folder for next time
+      lastSavedFolderId: validFolderId
     });
   }
 
@@ -147,10 +174,7 @@ function createBookmarkStore() {
   }
 
   async function migrateAllBookmarksLeague(newLeague: string) {
-    // Regex to match pathofexile.com/trade/search/ANY_LEAGUE/SEARCH_ID
-    // Captures the part before league and the part after league
     const leagueRegex = /(pathofexile\.com\/trade\/search\/)([^\/]+)(\/.*)?$/;
-    
     const updatedBookmarks = state.bookmarks.map(b => {
       if (leagueRegex.test(b.url)) {
         return {
@@ -160,7 +184,6 @@ function createBookmarkStore() {
       }
       return b;
     });
-
     await saveStateToStorage({
       ...state,
       bookmarks: updatedBookmarks
@@ -168,15 +191,10 @@ function createBookmarkStore() {
   }
 
   async function updateFolderBookmarks(folderId: string, newFolderBookmarks: Bookmark[]) {
-    // 1. We must synchronously calculate new bookmarks to avoid race conditions when dragging between folders
     const otherBookmarks = state.bookmarks.filter(
       b => b.folderId !== folderId && !newFolderBookmarks.some(nb => nb.id === b.id)
     );
-    
-    // 2. Set the folderId on the new list (vital for when an item was dragged from another folder)
     const updatedFolderBookmarks = newFolderBookmarks.map(b => ({ ...b, folderId }));
-
-    // 3. Update the state synchronously and save
     state.bookmarks = [...otherBookmarks, ...updatedFolderBookmarks];
     await saveStateToStorage(state);
   }
@@ -204,6 +222,7 @@ function createBookmarkStore() {
     get bookmarks() { return state.bookmarks },
     get lastSavedFolderId() { return state.lastSavedFolderId },
     get isMinimized() { return isMinimized },
+    get canRevert() { return revertState !== null },
     init,
     addFolder,
     deleteFolder,
@@ -214,6 +233,9 @@ function createBookmarkStore() {
     deleteBookmark,
     updateBookmarkDetails,
     migrateAllBookmarksLeague,
+    getExportBase64,
+    importFromBase64,
+    revertImport,
     updateFolderBookmarks,
     loadBookmark,
     toggleMinimize,
