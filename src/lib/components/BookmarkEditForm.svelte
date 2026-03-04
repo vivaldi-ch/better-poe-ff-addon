@@ -59,9 +59,6 @@
           aria-label="Select color {c}"
         ></button>
       {/each}
-      <div class="custom-color-wrapper">
-        <input type="color" bind:value={color} title="Custom color" />
-      </div>
     </div>
   </div>
 
@@ -148,22 +145,6 @@
 
   .color-option.selected {
     border: 2px solid #fff;
-  }
-
-  .custom-color-wrapper {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-  }
-
-  input[type="color"] {
-    width: 20px;
-    height: 20px;
-    padding: 0;
-    border: none;
-    background: none;
-    cursor: pointer;
   }
 
   .icon-picker {
