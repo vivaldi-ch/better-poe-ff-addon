@@ -146,6 +146,27 @@ function createBookmarkStore() {
     });
   }
 
+  async function migrateAllBookmarksLeague(newLeague: string) {
+    // Regex to match pathofexile.com/trade/search/ANY_LEAGUE/SEARCH_ID
+    // Captures the part before league and the part after league
+    const leagueRegex = /(pathofexile\.com\/trade\/search\/)([^\/]+)(\/.*)?$/;
+    
+    const updatedBookmarks = state.bookmarks.map(b => {
+      if (leagueRegex.test(b.url)) {
+        return {
+          ...b,
+          url: b.url.replace(leagueRegex, `$1${newLeague}$3`)
+        };
+      }
+      return b;
+    });
+
+    await saveStateToStorage({
+      ...state,
+      bookmarks: updatedBookmarks
+    });
+  }
+
   async function updateFolderBookmarks(folderId: string, newFolderBookmarks: Bookmark[]) {
     // 1. We must synchronously calculate new bookmarks to avoid race conditions when dragging between folders
     const otherBookmarks = state.bookmarks.filter(
@@ -192,6 +213,7 @@ function createBookmarkStore() {
     addBookmark,
     deleteBookmark,
     updateBookmarkDetails,
+    migrateAllBookmarksLeague,
     updateFolderBookmarks,
     loadBookmark,
     toggleMinimize,
