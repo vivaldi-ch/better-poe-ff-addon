@@ -34,6 +34,10 @@
 </div>
 
 <style>
+  /* 
+     For Custom Elements, styles MUST be in the <style> block to be injected into the Shadow DOM.
+     Global imports in <script> tags only inject into the main document head, which is ignored by Shadow DOM.
+  */
   @import './lib/styles/sidebar.css';
 
   /* Base styles for Sidebar structure not covered in components */
@@ -45,7 +49,6 @@
     cursor: pointer;
     padding: 0 5px;
     line-height: 1;
-    flex: 1;
   }
   .toggle-btn:hover {
     color: #e2d6b5;

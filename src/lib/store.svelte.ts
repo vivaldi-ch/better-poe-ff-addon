@@ -79,7 +79,6 @@ function createBookmarkStore() {
       
       await saveStateToStorage(validated.data);
     } catch (e) {
-      console.error('Import failed', e);
       throw e;
     }
   }

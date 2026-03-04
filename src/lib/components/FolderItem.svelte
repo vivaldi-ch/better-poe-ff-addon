@@ -6,7 +6,8 @@
   import { flip } from 'svelte/animate';
   import type { Bookmark } from '../types';
   import FolderEditForm from './FolderEditForm.svelte';
-  import BookmarkEditForm from './BookmarkEditForm.svelte';
+  import BookmarkItem from './BookmarkItem.svelte';
+  import { getTranslucentColor } from '../utils/color';
 
   let { folder } = $props<{ folder: import('../types').Folder }>();
 
@@ -21,12 +22,6 @@
   let editingName = $state(untrack(() => folder.name));
   let editingColor = $state(untrack(() => folder.color || '#a38d6d'));
   let editingIcon = $state(untrack(() => folder.icon || ''));
-
-  // Bookmark Editing state
-  let editingBookmarkId = $state<string | null>(null);
-  let editingBookmarkName = $state('');
-  let editingBookmarkColor = $state('');
-  let editingBookmarkIcon = $state('');
 
   // Derived folder display values
   let displayName = $derived(isEditingFolder ? editingName : folder.name);
@@ -57,15 +52,7 @@
     isEditingFolder = true;
   }
 
-  function handleEditBookmark(e: MouseEvent, bookmark: Bookmark) {
-    e.stopPropagation();
-    editingBookmarkId = bookmark.id;
-    editingBookmarkName = bookmark.name;
-    editingBookmarkColor = bookmark.color || '';
-    editingBookmarkIcon = bookmark.icon || '';
-  }
-
-  function handleDelete(e: MouseEvent) {
+  function handleDeleteFolder(e: MouseEvent) {
     e.stopPropagation();
     if (folder.id === DEFAULT_FOLDER_ID) return;
     
@@ -119,22 +106,6 @@
       cancelSave();
     }
   }
-
-  function getTranslucentColor(hex: string, opacity: number) {
-    if (!hex) return `rgba(163, 141, 109, ${opacity})`;
-    
-    let r = 0, g = 0, b = 0;
-    if (hex.length === 4) {
-      r = parseInt(hex[1] + hex[1], 16);
-      g = parseInt(hex[2] + hex[2], 16);
-      b = parseInt(hex[3] + hex[3], 16);
-    } else if (hex.length === 7) {
-      r = parseInt(hex.substring(1, 3), 16);
-      g = parseInt(hex.substring(3, 5), 16);
-      b = parseInt(hex.substring(5, 7), 16);
-    }
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-  }
 </script>
 
 <div 
@@ -161,9 +132,9 @@
     <span class="folder-count">({folderBookmarks.length})</span>
     
     <div class="header-actions">
-      <button class="btn-icon btn-edit-folder" onclick={handleEditFolder} aria-label="Edit folder" title="Edit folder">✎</button>
+      <button class="btn-icon-small btn-edit-folder" onclick={handleEditFolder} aria-label="Edit folder" title="Edit folder">✎</button>
       {#if folder.id !== DEFAULT_FOLDER_ID}
-        <button class="btn-icon btn-delete-folder" onclick={handleDelete} aria-label="Delete folder" title="Delete folder">✕</button>
+        <button class="btn-icon-small btn-delete-folder" onclick={handleDeleteFolder} aria-label="Delete folder" title="Delete folder">✕</button>
       {/if}
     </div>
   </div>
@@ -198,39 +169,7 @@
       >
         {#each folderBookmarks as bookmark (bookmark.id)}
           <div animate:flip={{ duration: 300 }} class="bookmark-wrapper">
-            <div 
-              class="bookmark-item" 
-              style:background-color={bookmark.id === editingBookmarkId ? getTranslucentColor(editingBookmarkColor, 0.1) : (bookmark.color ? getTranslucentColor(bookmark.color, 0.15) : 'rgba(20, 20, 20, 0.8)')}
-              style:border-color={bookmark.id === editingBookmarkId ? editingBookmarkColor : (bookmark.color || '#333')}
-            >
-              {#if editingBookmarkId === bookmark.id}
-                <BookmarkEditForm 
-                  {bookmark}
-                  bind:name={editingBookmarkName}
-                  bind:color={editingBookmarkColor}
-                  bind:icon={editingBookmarkIcon}
-                  onCancel={() => editingBookmarkId = null}
-                  onSave={() => editingBookmarkId = null}
-                />
-              {:else}
-                <!-- svelte-ignore a11y_click_events_have_key_events -->
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <div class="bookmark-main" onclick={() => store.loadBookmark(bookmark.url)} title={bookmark.url}>
-                  {#if bookmark.icon}
-                    <div class="bookmark-icon" style:border-color={bookmark.color || '#555'}>
-                      <img src={bookmark.icon} alt="" />
-                    </div>
-                  {/if}
-                  <div class="bookmark-name" style:color={bookmark.color || '#ccc'}>
-                    {bookmark.name}
-                  </div>
-                </div>
-                <div class="bookmark-actions">
-                  <button class="btn-icon" onclick={(e) => handleEditBookmark(e, bookmark)} aria-label="Edit" title="Edit">✎</button>
-                  <button class="btn-delete" onclick={() => store.deleteBookmark(bookmark.id)} aria-label="Delete">✕</button>
-                </div>
-              {/if}
-            </div>
+            <BookmarkItem {bookmark} />
           </div>
         {/each}
       </div>
@@ -240,6 +179,7 @@
           <div class="save-form">
             <!-- svelte-ignore a11y_autofocus -->
             <input 
+              class="poe-input"
               type="text" 
               bind:value={newBookmarkName} 
               placeholder="Bookmark name..."
@@ -262,8 +202,8 @@
 <style>
   .folder {
     margin-bottom: 8px;
-    background-color: #161616;
-    border: 1px solid #2a2a2a;
+    background-color: var(--poe-bg-panel);
+    border: 1px solid var(--poe-border);
     border-radius: 4px;
     overflow: hidden;
     transition: border-color 0.2s, background-color 0.2s;
@@ -275,7 +215,7 @@
     padding: 10px;
     cursor: pointer;
     user-select: none;
-    border-bottom: 1px solid transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     transition: background-color 0.2s;
     position: relative;
     z-index: 10;
@@ -290,7 +230,7 @@
     top: 0;
     left: 0;
     bottom: 0;
-    width: 60%;
+    width: 35%;
     background-size: cover;
     background-position: left center;
     background-repeat: no-repeat;
@@ -311,7 +251,7 @@
   .folder-name {
     flex: 1;
     font-weight: bold;
-    color: #fff; /* White text for better visibility */
+    color: #fff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -322,7 +262,7 @@
   }
 
   .folder-count {
-    color: #bbb;
+    color: var(--poe-text-dim);
     font-size: 0.95rem;
     margin: 0 8px;
     position: relative;
@@ -337,17 +277,17 @@
     z-index: 1;
   }
 
-  .btn-icon {
+  .btn-icon-small {
     background: none;
     border: none;
-    color: #888;
+    color: var(--poe-text-dim);
     cursor: pointer;
     padding: 2px 4px;
     font-size: 0.9rem;
     transition: color 0.2s;
   }
 
-  .btn-icon:hover {
+  .btn-icon-small:hover {
     color: #fff;
   }
 
@@ -357,7 +297,7 @@
 
   .folder-body {
     background-color: rgba(0, 0, 0, 0.3);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--poe-border);
     position: relative;
     padding: 6px;
   }
@@ -370,7 +310,7 @@
   }
 
   .folder-contents.drop-target {
-    border-color: #444;
+    border-color: var(--poe-border-light);
     background-color: rgba(255, 255, 255, 0.02);
   }
 
@@ -379,7 +319,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: #555;
+    color: var(--poe-text-dim);
     font-style: italic;
     font-size: 0.95rem;
     pointer-events: none;
@@ -393,98 +333,6 @@
     margin-bottom: 0;
   }
 
-  .bookmark-item {
-    display: flex;
-    flex-direction: column;
-    background-color: rgba(20, 20, 20, 0.8);
-    border: 1px solid #333;
-    border-radius: 3px;
-    transition: border-color 0.2s, background-color 0.2s;
-    overflow: hidden;
-  }
-
-  .bookmark-item:has(.bookmark-main:hover) {
-    border-color: #555;
-    background-color: rgba(30, 30, 30, 0.9);
-  }
-
-  .bookmark-main {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    padding: 6px 8px;
-    cursor: pointer;
-    min-height: 28px;
-  }
-
-  .bookmark-icon {
-    width: 16px;
-    height: 16px;
-    min-width: 16px;
-    margin-right: 8px;
-    border: 1px solid #555;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2px;
-    background-color: rgba(0,0,0,0.3);
-  }
-
-  .bookmark-icon img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-  }
-
-  .bookmark-name {
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 1.05rem;
-    color: #ccc;
-  }
-
-  .bookmark-main:hover .bookmark-name {
-    color: #fff;
-  }
-
-  .bookmark-actions {
-    display: flex;
-    position: absolute;
-    right: 4px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(20, 20, 20, 0.9);
-    padding: 2px;
-    border-radius: 4px;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .bookmark-wrapper {
-    position: relative;
-  }
-
-  .bookmark-wrapper:hover .bookmark-actions {
-    opacity: 1;
-  }
-
-  .btn-delete {
-    flex: 0 0 auto;
-    background: none;
-    border: none;
-    color: #666;
-    padding: 4px 6px;
-    font-size: 0.9rem;
-    cursor: pointer;
-  }
-
-  .btn-delete:hover {
-    color: #ff6b6b;
-  }
-
   .folder-actions {
     margin-top: 8px;
   }
@@ -496,60 +344,8 @@
     padding: 4px;
   }
 
-  input[type="text"] {
-    background-color: #000;
-    border: 1px solid #444;
-    color: #eee;
-    padding: 6px 10px;
-    border-radius: 2px;
-    font-family: 'FontinSmallcaps', 'Georgia', serif;
-    font-size: 1.1rem;
-  }
-
-  input[type="text"]:focus {
-    outline: none;
-    border-color: #a38d6d;
-  }
-
   .save-buttons {
     display: flex;
     gap: 8px;
-  }
-
-  button.btn-base {
-    font-family: 'FontinSmallcaps', 'Georgia', serif;
-    border: 1px solid #444;
-    padding: 6px 10px;
-    cursor: pointer;
-    border-radius: 2px;
-    background-color: #222;
-    color: #ccc;
-    flex: 1;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    width: 100%;
-    background-color: #1a1a1a;
-    border: 1px solid #444;
-    color: #aaa;
-    padding: 8px;
-    font-size: 1.05rem;
-    font-family: 'FontinSmallcaps', 'Georgia', serif;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: all 0.2s;
-  }
-
-  .btn-primary:hover {
-    background-color: #2a2a2a;
-    color: #e2d6b5;
-    border-color: #a38d6d;
-  }
-
-  .btn-confirm {
-    background-color: #1e3a24;
-    border-color: #3b6343;
-    color: #9bd4a9;
   }
 </style>

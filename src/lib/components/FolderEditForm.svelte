@@ -31,12 +31,12 @@
 
 <div class="edit-form">
   <div class="form-group">
-    <label for="folder-name">Name</label>
-    <input id="folder-name" type="text" bind:value={name} placeholder="Folder name" />
+    <label class="poe-label" for="folder-name">Name</label>
+    <input class="poe-input" id="folder-name" type="text" bind:value={name} placeholder="Folder name" />
   </div>
 
   <div class="form-group">
-    <span class="label">Color Options</span>
+    <span class="poe-label">Color Options</span>
     <div class="color-picker">
       {#each POE_COLORS as c}
         <button 
@@ -51,8 +51,8 @@
   </div>
 
   <div class="form-group">
-    <span class="label">Background Icon</span>
-    <div class="icon-picker">
+    <span class="poe-label">Background Icon</span>
+    <div class="icon-picker poe-scrollbar">
       <button 
         class="icon-option none" 
         class:selected={icon === ''}
@@ -85,8 +85,8 @@
     flex-direction: column;
     gap: 12px;
     padding: 12px;
-    background-color: #000;
-    border-top: 1px solid #333;
+    background-color: var(--poe-bg-dark);
+    border-top: 1px solid var(--poe-border);
   }
 
   .form-group {
@@ -95,33 +95,15 @@
     gap: 6px;
   }
 
-  label {
-    font-family: 'FontinSmallcaps', 'Georgia', serif;
-    font-size: 0.85rem;
-    color: #aaa;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  input[type="text"] {
-    background-color: #111;
-    border: 1px solid #444;
-    color: #eee;
-    padding: 8px;
-    border-radius: 2px;
-    font-family: 'FontinSmallcaps', 'Georgia', serif;
-    font-size: 1rem;
-  }
-
   .color-picker {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     align-items: center;
-    background: #111;
+    background: var(--poe-bg-panel);
     padding: 8px;
     border-radius: 4px;
-    border: 1px solid #222;
+    border: 1px solid var(--poe-border);
   }
 
   .color-option {
@@ -151,27 +133,15 @@
     max-height: 150px;
     overflow-y: auto;
     padding: 6px;
-    background-color: #111;
-    border: 1px solid #222;
+    background-color: var(--poe-bg-panel);
+    border: 1px solid var(--poe-border);
     border-radius: 4px;
-  }
-
-  /* Custom scrollbar for icon picker */
-  .icon-picker::-webkit-scrollbar {
-    width: 6px;
-  }
-  .icon-picker::-webkit-scrollbar-track {
-    background: #000;
-  }
-  .icon-picker::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 3px;
   }
 
   .icon-option {
     aspect-ratio: 1;
-    background-color: #1a1a1a;
-    border: 1px solid #333;
+    background-color: var(--poe-bg-header);
+    border: 1px solid var(--poe-border);
     border-radius: 3px;
     cursor: pointer;
     padding: 3px;
@@ -194,7 +164,7 @@
 
   .icon-option.selected {
     background-color: #3a3324;
-    border-color: #a38d6d;
+    border-color: var(--poe-gold);
     box-shadow: 0 0 5px rgba(163, 141, 109, 0.4);
   }
 
@@ -208,46 +178,5 @@
     display: flex;
     gap: 8px;
     margin-top: 4px;
-  }
-
-  button.btn-base {
-    font-family: 'FontinSmallcaps', 'Georgia', serif;
-    border: 1px solid #444;
-    padding: 8px 12px;
-    cursor: pointer;
-    border-radius: 2px;
-    background-color: #222;
-    color: #ccc;
-    flex: 1;
-    transition: all 0.2s;
-    font-size: 0.95rem;
-  }
-
-  button.btn-base:hover {
-    background-color: #333;
-    border-color: #666;
-    color: #fff;
-  }
-
-  .btn-confirm {
-    background-color: #1e3a24;
-    border-color: #3b6343;
-    color: #9bd4a9;
-  }
-  
-  .btn-confirm:hover {
-    background-color: #2a5233;
-    border-color: #4a7a53;
-  }
-
-  .btn-cancel {
-    background-color: #3a1e1e;
-    border-color: #633b3b;
-    color: #d49b9b;
-  }
-
-  .btn-cancel:hover {
-    background-color: #522a2a;
-    border-color: #7a4a4a;
   }
 </style>

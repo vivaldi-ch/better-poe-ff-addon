@@ -31,12 +31,12 @@
 
 <div class="edit-form">
   <div class="form-group">
-    <label for="bookmark-name">Bookmark Name</label>
-    <input id="bookmark-name" type="text" bind:value={name} placeholder="Bookmark name" />
+    <label class="poe-label" for="bookmark-name">Bookmark Name</label>
+    <input class="poe-input" id="bookmark-name" type="text" bind:value={name} placeholder="Bookmark name" />
   </div>
 
   <div class="form-group">
-    <span class="label">Background Color</span>
+    <span class="poe-label">Background Color</span>
     <div class="color-picker">
       {#each POE_COLORS as c}
         <button 
@@ -51,8 +51,8 @@
   </div>
 
   <div class="form-group">
-    <span class="label">Icon Style</span>
-    <div class="icon-picker">
+    <span class="poe-label">Icon Style</span>
+    <div class="icon-picker poe-scrollbar">
       <button 
         class="icon-option none" 
         class:selected={icon === ''}
@@ -66,7 +66,7 @@
           class:selected={icon === iconItem.url}
           onclick={() => icon = iconItem.url}
           title={iconItem.name}
-          style:border-color={color || '#555'}
+          style:border-color={color || 'var(--poe-border-light)'}
         >
           <img src={iconItem.url} alt={iconItem.name} />
         </button>
@@ -87,7 +87,7 @@
     gap: 10px;
     padding: 10px;
     background-color: #080808;
-    border: 1px solid #333;
+    border: 1px solid var(--poe-border);
     border-radius: 4px;
     margin: 4px 0 8px 0;
   }
@@ -96,23 +96,6 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-  }
-
-  label, .label {
-    font-family: 'FontinSmallcaps', 'Georgia', serif;
-    font-size: 0.8rem;
-    color: #888;
-    text-transform: uppercase;
-  }
-
-  input[type="text"] {
-    background-color: #000;
-    border: 1px solid #444;
-    color: #eee;
-    padding: 6px;
-    border-radius: 2px;
-    font-family: 'FontinSmallcaps', 'Georgia', serif;
-    font-size: 0.95rem;
   }
 
   .color-picker {
@@ -142,17 +125,17 @@
     max-height: 120px;
     overflow-y: auto;
     padding: 4px;
-    background-color: #000;
-    border: 1px solid #222;
+    background-color: var(--poe-bg-dark);
+    border: 1px solid var(--poe-border);
     border-radius: 2px;
   }
 
   .icon-option {
     width: 32px;
     height: 32px;
-    background-color: #111;
-    border: 2px solid #333;
-    border-radius: 50%; /* Circle shape for bookmark icons */
+    background-color: var(--poe-bg-panel);
+    border: 2px solid var(--poe-border);
+    border-radius: 50%;
     cursor: pointer;
     padding: 4px;
     display: flex;
@@ -188,29 +171,5 @@
     display: flex;
     gap: 6px;
     margin-top: 4px;
-  }
-
-  button.btn-base {
-    font-family: 'FontinSmallcaps', 'Georgia', serif;
-    border: 1px solid #444;
-    padding: 4px 8px;
-    cursor: pointer;
-    border-radius: 2px;
-    background-color: #222;
-    color: #ccc;
-    flex: 1;
-    font-size: 0.9rem;
-  }
-
-  .btn-confirm {
-    background-color: #1e3a24;
-    border-color: #3b6343;
-    color: #9bd4a9;
-  }
-
-  .btn-cancel {
-    background-color: #3a1e1e;
-    border-color: #633b3b;
-    color: #d49b9b;
   }
 </style>

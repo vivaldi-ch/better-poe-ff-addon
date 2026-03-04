@@ -1,0 +1,129 @@
+/* PoE Design Tokens */
+:host, :root {
+  --poe-gold: #a38d6d;
+  --poe-gold-light: #e2d6b5;
+  --poe-bg-dark: #000000;
+  --poe-bg-panel: #111111;
+  --poe-bg-header: #1a1a1a;
+  --poe-border: #333333;
+  --poe-border-light: #444444;
+  --poe-text: #ccc;
+  --poe-text-dim: #888;
+  --poe-text-bright: #eee;
+  --poe-font: 'FontinSmallcaps', 'Georgia', serif;
+  
+  /* Status Colors */
+  --poe-confirm-bg: #1e3a24;
+  --poe-confirm-border: #3b6343;
+  --poe-confirm-text: #9bd4a9;
+  --poe-cancel-bg: #3a1e1e;
+  --poe-cancel-border: #633b3b;
+  --poe-cancel-text: #d49b9b;
+}
+
+/* Common UI Elements - Wrapped in :global to avoid Svelte purging/warnings in Custom Elements */
+:global(.poe-input) {
+  background-color: var(--poe-bg-dark);
+  border: 1px solid var(--poe-border-light);
+  color: var(--poe-text-bright);
+  padding: 8px;
+  border-radius: 2px;
+  font-family: var(--poe-font);
+  font-size: 1rem;
+}
+
+:global(.poe-input:focus) {
+  outline: none;
+  border-color: var(--poe-gold);
+}
+
+:global(.poe-label) {
+  font-family: var(--poe-font);
+  font-size: 0.85rem;
+  color: var(--poe-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Button Base */
+:global(.btn-base) {
+  font-family: var(--poe-font);
+  border: 1px solid var(--poe-border-light);
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 2px;
+  background-color: #222;
+  color: var(--poe-text);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:global(.btn-base:hover:not(:disabled)) {
+  background-color: #333;
+  border-color: #666;
+  color: #fff;
+}
+
+:global(.btn-base:disabled) {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Button Variants */
+:global(.btn-confirm) {
+  background-color: var(--poe-confirm-bg);
+  border-color: var(--poe-confirm-border);
+  color: var(--poe-confirm-text);
+}
+
+:global(.btn-confirm:hover:not(:disabled)) {
+  background-color: #2a5233;
+  border-color: #4a7a53;
+}
+
+:global(.btn-cancel) {
+  background-color: var(--poe-cancel-bg);
+  border-color: var(--poe-cancel-border);
+  color: var(--poe-cancel-text);
+}
+
+:global(.btn-cancel:hover:not(:disabled)) {
+  background-color: #522a2a;
+  border-color: #7a4a4a;
+}
+
+:global(.btn-primary) {
+  width: 100%;
+  background-color: var(--poe-bg-header);
+  border: 1px solid var(--poe-border-light);
+  color: var(--poe-text-dim);
+  padding: 8px;
+  font-size: 1.05rem;
+  font-family: var(--poe-font);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+:global(.btn-primary:hover:not(:disabled)) {
+  background-color: #2a2a2a;
+  color: var(--poe-gold-light);
+  border-color: var(--poe-gold);
+}
+
+/* Custom Scrollbar */
+:global(.poe-scrollbar::-webkit-scrollbar) {
+  width: 6px;
+}
+:global(.poe-scrollbar::-webkit-scrollbar-track) {
+  background: var(--poe-bg-dark);
+}
+:global(.poe-scrollbar::-webkit-scrollbar-thumb) {
+  background: var(--poe-border);
+  border-radius: 3px;
+}
+:global(.poe-scrollbar::-webkit-scrollbar-thumb:hover) {
+  background: var(--poe-border-light);
+}
