@@ -92,8 +92,14 @@ function createBookmarkStore() {
   }
 
   async function updateFoldersOrder(newFolders: Folder[]) {
+    // Ensure the default folder is preserved if it's hidden from the UI
+    const defaultFolder = state.folders.find(f => f.id === DEFAULT_FOLDER_ID);
+    if (defaultFolder && !newFolders.some(f => f.id === DEFAULT_FOLDER_ID)) {
+      state.folders = [defaultFolder, ...newFolders];
+    } else {
+      state.folders = newFolders;
+    }
     // Sync state immediately for UI fluidity
-    state.folders = newFolders;
     await saveStateToStorage(state);
   }
 

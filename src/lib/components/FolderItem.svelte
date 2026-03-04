@@ -9,6 +9,9 @@
   let folderBookmarks = $state<Bookmark[]>([]);
   let isHoveringDrop = $state(false);
 
+  let isSaving = $state(false);
+  let newBookmarkName = $state('');
+
   $effect(() => {
     folderBookmarks = store.bookmarks.filter(b => b.folderId === folder.id);
   });
@@ -44,6 +47,33 @@
     folderBookmarks = e.detail.items;
     isHoveringDrop = false;
     await store.updateFolderBookmarks(folder.id, folderBookmarks);
+  }
+
+  function startSaving() {
+    isSaving = true;
+    newBookmarkName = '';
+  }
+
+  async function confirmSave() {
+    if (!newBookmarkName.trim()) return;
+    await store.addBookmark(newBookmarkName, window.location.href, folder.id);
+    isSaving = false;
+    newBookmarkName = '';
+  }
+
+  function cancelSave() {
+    isSaving = false;
+    newBookmarkName = '';
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      confirmSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelSave();
+    }
   }
 </script>
 
@@ -89,6 +119,27 @@
             </div>
           </div>
         {/each}
+      </div>
+
+      <div class="folder-actions">
+        {#if isSaving}
+          <div class="save-form">
+            <!-- svelte-ignore a11y_autofocus -->
+            <input 
+              type="text" 
+              bind:value={newBookmarkName} 
+              placeholder="Bookmark name..."
+              onkeydown={handleKeyDown}
+              autofocus
+            />
+            <div class="save-buttons">
+              <button class="btn-base btn-confirm" onclick={confirmSave}>Save</button>
+              <button class="btn-base btn-cancel" onclick={cancelSave}>Cancel</button>
+            </div>
+          </div>
+        {:else}
+          <button class="btn-primary" onclick={startSaving}>+ Save Current Search Here</button>
+        {/if}
       </div>
     </div>
   {/if}
@@ -231,5 +282,79 @@
 
   .btn-delete:hover {
     color: #ff6b6b;
+  }
+
+  .folder-actions {
+    margin-top: 8px;
+  }
+
+  .save-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  input[type="text"] {
+    background-color: #000;
+    border: 1px solid #444;
+    color: #eee;
+    padding: 8px;
+    border-radius: 2px;
+    font-family: 'FontinSmallcaps', 'Georgia', serif;
+    font-size: 1.1rem;
+  }
+
+  input[type="text"]:focus {
+    outline: none;
+    border-color: #a38d6d;
+  }
+
+  .save-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  button.btn-base {
+    font-family: 'FontinSmallcaps', 'Georgia', serif;
+    border: 1px solid #444;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    background-color: #222;
+    color: #ccc;
+    flex: 1;
+    transition: all 0.2s;
+  }
+
+  button.btn-base:hover {
+    background-color: #333;
+    border-color: #555;
+  }
+
+  .btn-primary {
+    width: 100%;
+    background-color: #2a2a2a;
+    border-color: #a38d6d;
+    color: #e2d6b5;
+    padding: 8px;
+    font-size: 1.1rem;
+    font-family: 'FontinSmallcaps', 'Georgia', serif;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+
+  .btn-primary:hover {
+    background-color: #3a3324;
+    border-color: #c4a983;
+  }
+
+  .btn-confirm {
+    background-color: #1e3a24;
+    border-color: #3b6343;
+    color: #9bd4a9;
+  }
+  
+  .btn-confirm:hover {
+    background-color: #2a5233;
   }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { store } from '../store.svelte';
+  import { store, DEFAULT_FOLDER_ID } from '../store.svelte';
   import FolderItem from './FolderItem.svelte';
   import { dndzone, type DndEvent } from 'svelte-dnd-action';
   import { flip } from 'svelte/animate';
@@ -9,10 +9,10 @@
   let newFolderName = $state('');
 
   // Local state for dragging animations
-  let folders = $state<Folder[]>(store.folders);
+  let folders = $state<Folder[]>(store.folders.filter(f => f.id !== DEFAULT_FOLDER_ID));
 
   $effect(() => {
-    folders = store.folders;
+    folders = store.folders.filter(f => f.id !== DEFAULT_FOLDER_ID);
   });
 
   function startCreating() {
@@ -77,7 +77,7 @@
     onconsider={handleDndConsider as any} 
     onfinalize={handleDndFinalize as any}
   >
-    {#if store.folders.length === 0}
+    {#if folders.length === 0}
       <p class="empty-state">No folders exist.</p>
     {:else}
       {#each folders as folder (folder.id)}
