@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../store.svelte';
   import type { Bookmark } from '../types';
+  import { POE_COLORS } from '../constants';
 
   // Import all PNG icons from assets folder as URLs
   const iconModules = import.meta.glob('../assets/*.png', { eager: true, query: '?url' });
@@ -26,19 +27,6 @@
     });
     onSave();
   }
-
-  const colors = [
-    '#333333', // Default Dark
-    '#a38d6d', // PoE Gold
-    '#ff6b6b', // Red
-    '#51cf66', // Green
-    '#339af0', // Blue
-    '#cc5de8', // Purple
-    '#fcc419', // Yellow
-    '#ff922b', // Orange
-    '#20c997', // Teal
-    '#adb5bd', // Grey
-  ];
 </script>
 
 <div class="edit-form">
@@ -50,7 +38,7 @@
   <div class="form-group">
     <span class="label">Background Color</span>
     <div class="color-picker">
-      {#each colors as c}
+      {#each POE_COLORS as c}
         <button 
           class="color-option" 
           style:background-color={c} 
