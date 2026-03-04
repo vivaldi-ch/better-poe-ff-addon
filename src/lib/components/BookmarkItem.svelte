@@ -120,7 +120,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     color: var(--poe-text);
   }
 

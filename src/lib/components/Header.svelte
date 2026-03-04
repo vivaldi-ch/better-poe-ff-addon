@@ -206,14 +206,14 @@
 
   .section-title {
     font-family: 'FontinSmallcaps', 'Georgia', serif;
-    font-size: 0.9rem;
+    font-size: 1.25rem;
     color: #ccc;
     text-transform: uppercase;
   }
 
   .description {
     margin: 0;
-    font-size: 0.75rem;
+    font-size: 1.1rem;
     color: #777;
     line-height: 1.2;
   }
@@ -230,7 +230,7 @@
     color: #aaa;
     padding: 6px 8px;
     border-radius: 2px;
-    font-size: 0.85rem;
+    font-size: 1rem;
     min-width: 0;
   }
 
@@ -253,7 +253,7 @@
     font-family: 'FontinSmallcaps', 'Georgia', serif;
     cursor: pointer;
     border-radius: 2px;
-    font-size: 0.85rem;
+    font-size: 1rem;
     white-space: nowrap;
   }
 

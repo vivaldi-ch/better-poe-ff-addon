@@ -255,7 +255,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 1.25rem;
+    font-size: 1.35rem;
     position: relative;
     z-index: 1;
     text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 1px rgba(0,0,0,1);

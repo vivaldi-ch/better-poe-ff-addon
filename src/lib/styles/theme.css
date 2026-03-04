@@ -29,7 +29,7 @@
   padding: 8px;
   border-radius: 2px;
   font-family: var(--poe-font);
-  font-size: 1rem;
+  font-size: 1.15rem;
 }
 
 :global(.poe-input:focus) {
@@ -49,7 +49,7 @@
 :global(.btn-base) {
   font-family: var(--poe-font);
   border: 1px solid var(--poe-border-light);
-  padding: 8px 12px;
+  padding: 6px 12px;
   cursor: pointer;
   border-radius: 2px;
   background-color: #222;
