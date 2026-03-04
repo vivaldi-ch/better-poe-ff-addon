@@ -80,6 +80,15 @@ The build artifacts will be located in the `dist/` directory.
 - `src/lib/assets/`: PoE-themed icons and images.
 - `src/lib/constants.ts`: Shared constants like the PoE color palette.
 
+## Future Refactors (Architectural Roadmap)
+
+- [ ] **URL Deconstruction (Data Modeling):** Store bookmarks as objects `{ searchId, league }` instead of full URL strings to simplify migrations and future PoE 2 support.
+- [ ] **Component Decomposition:** Extract `BookmarkItem.svelte` from `FolderItem.svelte` to resolve the "God Component" pattern and encapsulate bookmark-specific logic.
+- [ ] **Logic & Service Separation:** Decouple browser storage I/O and validation into a `StorageService.ts`, keeping the store focused on reactive state.
+- [ ] **Shared Style System:** Move duplicated PoE-themed design tokens and component styles into a centralized `theme.css`.
+- [ ] **Robust Notifications:** Replace blocking native `alert()`/`confirm()` calls with a non-blocking, PoE-themed Toast or Modal system.
+- [ ] **Utility Extraction:** Move pure logic like color conversion (`getTranslucentColor`) into dedicated utility modules for better testability.
+
 ## License
 
 MIT
